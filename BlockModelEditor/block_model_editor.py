@@ -37,9 +37,6 @@ def get_user_query():
 
     return input("\nChoose a command: ")
 
-    
-
-
 blocks = []
 
 user_input = get_user_input()
