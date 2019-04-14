@@ -72,3 +72,5 @@ BlockModelEditor/venv/
 BlockModelEditor/__pycache__/
 
 BlockModelEditor/.idea/
+
+BlockModelEditor/tests/__pycache__/
