@@ -97,6 +97,7 @@ def query_block_model(current_block_model):
 def reblock_blocks_into_one(current_block_model, starting_position_tuple, blocks_to_group_x, blocks_to_group_y,
                             blocks_to_group_z):
     total_weight = 0
+    total_grade = 0
     starting_x, starting_y, starting_z = starting_position_tuple
     for i in range(blocks_to_group_x):
         for j in range(blocks_to_group_y):
@@ -104,7 +105,9 @@ def reblock_blocks_into_one(current_block_model, starting_position_tuple, blocks
                 block = current_block_model.get_block_at_position((starting_x + i, starting_y + j, starting_z + k))
                 if block is not None:
                     total_weight += block.weight
-    return block_model.Block(total_weight, 0)
+                    total_grade += block.grade * block.weight
+    total_grade = total_grade / total_weight
+    return block_model.Block(total_weight, total_grade)
 
 
 def reblock_model(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
