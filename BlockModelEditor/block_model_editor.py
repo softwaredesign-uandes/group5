@@ -94,14 +94,32 @@ def query_block_model(current_block_model):
         query = get_user_query()
 
 
+def reblock_blocks_into_one(current_block_model, starting_position_tuple, blocks_to_group_x, blocks_to_group_y,
+                            blocks_to_group_z):
+    total_weight = 0
+    starting_x, starting_y, starting_z = starting_position_tuple
+    for i in range(blocks_to_group_x):
+        for j in range(blocks_to_group_y):
+            for k in range(blocks_to_group_z):
+                block = current_block_model.get_block_at_position((starting_x + i, starting_y + j, starting_z + k))
+                if block is not None:
+                    total_weight += block.weight
+    return block_model.Block(total_weight, 0)
+
+
 def reblock_model(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
     width, depth, height = current_block_model.get_model_dimensions()
-    reblock_width = width / blocks_to_group_x
-    reblock_depth = depth / blocks_to_group_y
-    reblock_height = height / blocks_to_group_z
+    reblock_width = int(width / blocks_to_group_x)
+    reblock_depth = int(depth / blocks_to_group_y)
+    reblock_height = int(height / blocks_to_group_z)
     reblocked_model = block_model.BlockModel()
-    for i in range(int(reblock_width * reblock_depth * reblock_height)):
-        reblocked_model.add_block((i, i, i), block_model.Block(0, 0))
+    for i in range(reblock_width):
+        for j in range(reblock_depth):
+            for k in range(reblock_height):
+                starting_block_position = (i * blocks_to_group_x, j * blocks_to_group_y, k * blocks_to_group_z)
+                reblocked_block = reblock_blocks_into_one(current_block_model, starting_block_position,
+                                                          blocks_to_group_x, blocks_to_group_y, blocks_to_group_z )
+                reblocked_model.add_block((i, j, k), reblocked_block)
     return reblocked_model
 
 

@@ -49,4 +49,4 @@ def test_model_reblock_weight():
     blocks.add_block((1, 1, 0), block7)
     blocks.add_block((1, 1, 1), block8)
     reblocked_model = block_model_editor.reblock_model(blocks, 2, 2, 2)
-    assert round(reblocked_model.get_block_at_position((0, 0, 0)).weight, 10) == 12.3625, "Weight should be 12.3625"
+    assert round(reblocked_model.get_block_at_position((0, 0, 0)).weight, 10) == 98.9, "Weight should be 98.9"
