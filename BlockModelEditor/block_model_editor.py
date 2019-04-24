@@ -121,7 +121,7 @@ def reblock_model(current_block_model, blocks_to_group_x, blocks_to_group_y, blo
             for k in range(reblock_height):
                 starting_block_position = (i * blocks_to_group_x, j * blocks_to_group_y, k * blocks_to_group_z)
                 reblocked_block = reblock_blocks_into_one(current_block_model, starting_block_position,
-                                                          blocks_to_group_x, blocks_to_group_y, blocks_to_group_z )
+                                                          blocks_to_group_x, blocks_to_group_y, blocks_to_group_z)
                 reblocked_model.add_block((i, j, k), reblocked_block)
     return reblocked_model
 
