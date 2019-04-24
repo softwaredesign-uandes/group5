@@ -95,7 +95,13 @@ def query_block_model(current_block_model):
 
 
 def reblock_model(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
+    width, depth, height = current_block_model.get_model_dimensions()
+    reblock_width = width / blocks_to_group_x
+    reblock_depth = depth / blocks_to_group_y
+    reblock_height = height / blocks_to_group_z
     reblocked_model = block_model.BlockModel()
+    for i in range(int(reblock_width * reblock_depth * reblock_height)):
+        reblocked_model.add_block((i, i, i), block_model.Block(0, 0))
     return reblocked_model
 
 

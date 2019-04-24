@@ -34,7 +34,7 @@ class BlockModel:
                 max_position_y = position[1]
             if position[2] > max_position_z:
                 max_position_z = position[2]
-        return max_position_x, max_position_y, max_position_z
+        return max_position_x + 1, max_position_y + 1, max_position_z + 1
 
     def get_total_weight(self):
         total_weight = 0
