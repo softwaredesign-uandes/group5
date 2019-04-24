@@ -94,6 +94,11 @@ def query_block_model(current_block_model):
         query = get_user_query()
 
 
+def reblock_model(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
+    reblocked_model = block_model.BlockModel()
+    return reblocked_model
+
+
 def main():
     blocks = block_model.BlockModel()
 
