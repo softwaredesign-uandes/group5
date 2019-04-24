@@ -1,10 +1,13 @@
 import block_model
 
 
-def test_block_creation():
+def test_block_creation_weight():
     block = block_model.Block(10.8, 5.3)
-    assert block.weight == 10.8 and block.grade == 5.3, "Weight should be 10.8 and Grade should be 5.3"
+    assert block.weight == 10.8, "Weight should be 10.8"
 
+def test_block_creation_grade():
+    block = block_model.Block(10.8, 5.3)
+    assert block.grade == 5.3, "Grade should be 5.3"
 
 def test_block_model_add_and_get():
     block = block_model.Block(10.8, 5.3)
