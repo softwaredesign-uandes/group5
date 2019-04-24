@@ -94,21 +94,25 @@ def query_block_model(current_block_model):
         query = get_user_query()
 
 
-# Main
-blocks = block_model.BlockModel()
-
-user_input = get_user_input()
-
-while user_input is not '3':
-
-    if user_input is '1':
-        new_block_model = import_block_model()
-        if new_block_model is not None:
-            blocks = new_block_model
-
-    elif user_input is '2':
-        query_block_model(blocks)
+def main():
+    blocks = block_model.BlockModel()
 
     user_input = get_user_input()
 
-print("Goodbye !")
+    while user_input is not '3':
+
+        if user_input is '1':
+            new_block_model = import_block_model()
+            if new_block_model is not None:
+                blocks = new_block_model
+
+        elif user_input is '2':
+            query_block_model(blocks)
+
+        user_input = get_user_input()
+
+    print("Goodbye !")
+
+
+if __name__ == "__main__":
+    main()
