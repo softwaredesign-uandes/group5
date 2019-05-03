@@ -37,7 +37,7 @@ def test_block_model_get_model_dimensions():
     blocks = block_model.BlockModel()
     blocks.add_block((2, 5, 8), block1)
     blocks.add_block((6, 3, 9), block2)
-    assert blocks.get_model_dimensions() == (6, 5, 9), "Model dimensions should be (6, 5, 9)"
+    assert blocks.get_model_dimensions() == (7, 6, 10), "Model dimensions should be (7, 6, 10)"
 
 
 def test_block_model_get_total_weight():

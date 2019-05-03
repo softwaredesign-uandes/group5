@@ -27,6 +27,8 @@ class BlockModel:
         max_position_x = 0
         max_position_y = 0
         max_position_z = 0
+        if self.get_total_block_number() == 0:
+            return max_position_x, max_position_y, max_position_z
         for position in self.blocks:
             if position[0] > max_position_x:
                 max_position_x = position[0]
@@ -34,7 +36,7 @@ class BlockModel:
                 max_position_y = position[1]
             if position[2] > max_position_z:
                 max_position_z = position[2]
-        return max_position_x, max_position_y, max_position_z
+        return max_position_x + 1, max_position_y + 1, max_position_z + 1
 
     def get_total_weight(self):
         total_weight = 0
