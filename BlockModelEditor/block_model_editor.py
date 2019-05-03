@@ -1,5 +1,6 @@
 from pathlib import Path
 import block_model
+import math
 
 
 def import_block_model_from_file(filename, data_columns):
@@ -112,9 +113,9 @@ def reblock_blocks_into_one(current_block_model, starting_position_tuple, blocks
 
 def reblock_model(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
     width, depth, height = current_block_model.get_model_dimensions()
-    reblock_width = int(width / blocks_to_group_x)
-    reblock_depth = int(depth / blocks_to_group_y)
-    reblock_height = int(height / blocks_to_group_z)
+    reblock_width = int(math.ceil(width / float(blocks_to_group_x)))
+    reblock_depth = int(math.ceil(depth / float(blocks_to_group_y)))
+    reblock_height = int(math.ceil(height / float(blocks_to_group_z)))
     reblocked_model = block_model.BlockModel()
     for i in range(reblock_width):
         for j in range(reblock_depth):
