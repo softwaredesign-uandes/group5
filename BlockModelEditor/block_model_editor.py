@@ -1,6 +1,8 @@
 from pathlib import Path
 import block_model
 import math
+from itertools import product
+from functools import reduce
 
 
 def import_block_model_from_file(filename, data_columns):
@@ -95,35 +97,57 @@ def query_block_model(current_block_model):
         query = get_user_query()
 
 
-def reblock_blocks_into_one(current_block_model, starting_position_tuple, blocks_to_group_x, blocks_to_group_y,
-                            blocks_to_group_z):
-    total_weight = 0
-    total_grade = 0
-    starting_x, starting_y, starting_z = starting_position_tuple
-    for i in range(blocks_to_group_x):
-        for j in range(blocks_to_group_y):
-            for k in range(blocks_to_group_z):
-                block = current_block_model.get_block_at_position((starting_x + i, starting_y + j, starting_z + k))
-                if block is not None:
-                    total_weight += block.weight
-                    total_grade += block.grade * block.weight
-    total_grade = total_grade / total_weight
-    return block_model.Block(total_weight, total_grade)
-
-
-def reblock_model(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
+def get_reblock_dimensions(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
     width, depth, height = current_block_model.get_model_dimensions()
     reblock_width = int(math.ceil(width / float(blocks_to_group_x)))
     reblock_depth = int(math.ceil(depth / float(blocks_to_group_y)))
     reblock_height = int(math.ceil(height / float(blocks_to_group_z)))
+    return reblock_width, reblock_depth, reblock_height
+
+
+def reblock_two_blocks(first_block, second_block):
+    first_block_weight = first_block.weight if first_block is not None else 0
+    first_block_grade = first_block.grade if first_block is not None else 0
+    second_block_weight = second_block.weight if second_block is not None else 0
+    second_block_grade = second_block.grade if second_block is not None else 0
+    new_weight = first_block_weight + second_block_weight
+    new_grade = (first_block_grade * first_block_weight + second_block_grade * second_block_weight) / new_weight
+    return block_model.Block(new_weight, new_grade)
+
+
+def reblock_block_with_surrounding_blocks(current_block_model, starting_position_tuple, blocks_to_group_tuple):
+    block_indexes_upper_range = (starting_position_tuple[0] + blocks_to_group_tuple[0],
+                                 starting_position_tuple[1] + blocks_to_group_tuple[1],
+                                 starting_position_tuple[2] + blocks_to_group_tuple[2])
+    blocks_to_reblock_indexes = list(product(range(starting_position_tuple[0], block_indexes_upper_range[0]),
+                                             range(starting_position_tuple[1], block_indexes_upper_range[1]),
+                                             range(starting_position_tuple[2], block_indexes_upper_range[2])))
+    blocks_to_reblock = list(map(lambda x: current_block_model.get_block_at_position(x), blocks_to_reblock_indexes))
+    reblocked_block = reduce((lambda x, y: reblock_two_blocks(x, y)), blocks_to_reblock)
+    return reblocked_block
+
+
+def reblock_model_block_into_new_model(current_block_model, new_model, blocks_to_group_tuple,
+                                       new_model_block_index_tuple):
+    current_model_block_index_x = new_model_block_index_tuple[0] * blocks_to_group_tuple[0]
+    current_model_block_index_y = new_model_block_index_tuple[1] * blocks_to_group_tuple[1]
+    current_model_block_index_z = new_model_block_index_tuple[2] * blocks_to_group_tuple[2]
+    starting_block_position = (current_model_block_index_x, current_model_block_index_y, current_model_block_index_z)
+    reblocked_block = reblock_block_with_surrounding_blocks(current_block_model, starting_block_position,
+                                                            blocks_to_group_tuple)
+    new_model.add_block(new_model_block_index_tuple, reblocked_block)
+
+
+def reblock_model(current_block_model, blocks_to_group_tuple):
+    reblock_width, reblock_depth, reblock_height = get_reblock_dimensions(current_block_model, blocks_to_group_tuple[0],
+                                                                          blocks_to_group_tuple[1],
+                                                                          blocks_to_group_tuple[2])
     reblocked_model = block_model.BlockModel()
-    for i in range(reblock_width):
-        for j in range(reblock_depth):
-            for k in range(reblock_height):
-                starting_block_position = (i * blocks_to_group_x, j * blocks_to_group_y, k * blocks_to_group_z)
-                reblocked_block = reblock_blocks_into_one(current_block_model, starting_block_position,
-                                                          blocks_to_group_x, blocks_to_group_y, blocks_to_group_z)
-                reblocked_model.add_block((i, j, k), reblocked_block)
+    reblocked_model_indexes = list(product(range(reblock_width), range(reblock_depth), range(reblock_height)))
+
+    list(map(lambda x: reblock_model_block_into_new_model(current_block_model, reblocked_model, blocks_to_group_tuple,
+                                                          x), reblocked_model_indexes))
+
     return reblocked_model
 
 
