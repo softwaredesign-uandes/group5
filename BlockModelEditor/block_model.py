@@ -1,8 +1,53 @@
-class Block:
+class VirtualBlock:
+
+    @property
+    def weight(self):
+        raise NotImplementedError
+
+    @property
+    def grade(self):
+        raise NotImplementedError
+
+
+class Block(VirtualBlock):
 
     def __init__(self, weight, grade):
-        self.weight = weight
-        self.grade = grade
+        self._weight = weight
+        self._grade = grade
+
+    @property
+    def weight(self):
+        return self._weight
+
+    @property
+    def grade(self):
+        return self._grade
+
+
+class BlockGroup(VirtualBlock):
+
+    def __init__(self):
+        self.blocks = []
+
+    @property
+    def weight(self):
+        weights = map(lambda x: x.weight, self.blocks)
+        return sum(weights)
+
+    @property
+    def grade(self):
+        weighted_grades = map(lambda x: x.weight * x.grade, self.blocks)
+        weight = self.weight
+        return sum(weighted_grades) / weight if weight > 0 else 0
+
+    def add_block(self, block):
+        self.blocks.append(block)
+
+    def remove_block(self, block):
+        self.blocks.remove(block)
+
+    def block_count(self):
+        return len(self.blocks)
 
 
 class BlockModel:

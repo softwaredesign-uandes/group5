@@ -6,6 +6,49 @@ def test_block_creation():
     assert block.weight == 10.8 and block.grade == 5.3, "Weight should be 10.8 and Grade should be 5.3"
 
 
+def test_block_group_add_and_count():
+    block_group = block_model.BlockGroup()
+    block1 = block_model.Block(10.8, 5.3)
+    block_group.add_block(block1)
+    assert block_group.block_count() == 1, "Block count should be 1"
+
+
+def test_empty_block_group_weight():
+    block_group = block_model.BlockGroup()
+    assert round(block_group.weight, 10) == 0, "Weight should be 0"
+
+
+def test_empty_block_group_grade():
+    block_group = block_model.BlockGroup()
+    assert round(block_group.grade, 10) == 0, "Grade should be 0"
+
+
+def test_block_group_weight():
+    block_group1 = block_model.BlockGroup()
+    block1 = block_model.Block(10.8, 5.3)
+    block_group1.add_block(block1)
+    block_group2 = block_model.BlockGroup()
+    block2 = block_model.Block(13.4, 3.7)
+    block3 = block_model.Block(8.7, 2.5)
+    block_group2.add_block(block2)
+    block_group2.add_block(block3)
+    block_group1.add_block(block_group2)
+    assert round(block_group1.weight, 10) == 32.9, "Weight should be 32.9"
+
+
+def test_block_group_grade():
+    block_group1 = block_model.BlockGroup()
+    block1 = block_model.Block(10.8, 5.3)
+    block_group1.add_block(block1)
+    block_group2 = block_model.BlockGroup()
+    block2 = block_model.Block(13.4, 3.7)
+    block3 = block_model.Block(8.7, 2.5)
+    block_group2.add_block(block2)
+    block_group2.add_block(block3)
+    block_group1.add_block(block_group2)
+    assert round(block_group1.grade, 10) == 3.9079027356, "Grade should be 3.9079027356"
+
+
 def test_block_model_add_and_get():
     block = block_model.Block(10.8, 5.3)
     blocks = block_model.BlockModel()
