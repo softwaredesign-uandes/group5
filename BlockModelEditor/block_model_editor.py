@@ -97,11 +97,11 @@ def query_block_model(current_block_model):
         query = get_user_query()
 
 
-def get_reblock_dimensions(current_block_model, blocks_to_group_x, blocks_to_group_y, blocks_to_group_z):
+def get_reblock_dimensions(current_block_model, blocks_to_group_tuple):
     width, depth, height = current_block_model.get_model_dimensions()
-    reblock_width = int(math.ceil(width / float(blocks_to_group_x)))
-    reblock_depth = int(math.ceil(depth / float(blocks_to_group_y)))
-    reblock_height = int(math.ceil(height / float(blocks_to_group_z)))
+    reblock_width = int(math.ceil(width / float(blocks_to_group_tuple[0])))
+    reblock_depth = int(math.ceil(depth / float(blocks_to_group_tuple[1])))
+    reblock_height = int(math.ceil(height / float(blocks_to_group_tuple[2])))
     return reblock_width, reblock_depth, reblock_height
 
 
@@ -139,9 +139,7 @@ def reblock_model_block_into_new_model(current_block_model, new_model, blocks_to
 
 
 def reblock_model(current_block_model, blocks_to_group_tuple):
-    reblock_width, reblock_depth, reblock_height = get_reblock_dimensions(current_block_model, blocks_to_group_tuple[0],
-                                                                          blocks_to_group_tuple[1],
-                                                                          blocks_to_group_tuple[2])
+    reblock_width, reblock_depth, reblock_height = get_reblock_dimensions(current_block_model, blocks_to_group_tuple)
     reblocked_model = block_model.BlockModel()
     reblocked_model_indexes = list(product(range(reblock_width), range(reblock_depth), range(reblock_height)))
 
@@ -149,6 +147,38 @@ def reblock_model(current_block_model, blocks_to_group_tuple):
                                                           x), reblocked_model_indexes))
 
     return reblocked_model
+
+
+def group_block_with_surrounding_blocks(current_block_model, starting_position_tuple, blocks_to_group_tuple):
+    block_indexes_upper_range = (starting_position_tuple[0] + blocks_to_group_tuple[0],
+                                 starting_position_tuple[1] + blocks_to_group_tuple[1],
+                                 starting_position_tuple[2] + blocks_to_group_tuple[2])
+    blocks_to_group_indexes = list(product(range(starting_position_tuple[0], block_indexes_upper_range[0]),
+                                           range(starting_position_tuple[1], block_indexes_upper_range[1]),
+                                           range(starting_position_tuple[2], block_indexes_upper_range[2])))
+    blocks_to_group = list(map(lambda x: current_block_model.get_block_at_position(x), blocks_to_group_indexes))
+    block_group = block_model.BlockGroup()
+    list(map(lambda x: block_group.add_block(x), blocks_to_group))
+    return block_group
+
+
+def group_model_block_into_new_model(current_block_model, new_model, blocks_to_group_tuple,
+                                     new_model_block_index_tuple):
+    starting_block_position = (new_model_block_index_tuple[0] * blocks_to_group_tuple[0],
+                               new_model_block_index_tuple[1] * blocks_to_group_tuple[1],
+                               new_model_block_index_tuple[2] * blocks_to_group_tuple[2])
+    virtual_block = reblock_block_with_surrounding_blocks(current_block_model, starting_block_position,
+                                                          blocks_to_group_tuple)
+    new_model.add_block(new_model_block_index_tuple, virtual_block)
+
+
+def virtual_reblock_model(current_block_model, blocks_to_group_tuple):
+    reblock_width, reblock_depth, reblock_height = get_reblock_dimensions(current_block_model, blocks_to_group_tuple)
+    virtual_reblocked_model = block_model.BlockModel()
+    virtual_blocks_model_indexes = list(product(range(reblock_width), range(reblock_depth), range(reblock_height)))
+    list(map(lambda x: group_model_block_into_new_model(current_block_model, virtual_reblocked_model,
+                                                        blocks_to_group_tuple, x), virtual_blocks_model_indexes))
+    return virtual_reblocked_model
 
 
 def main():
