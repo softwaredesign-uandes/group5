@@ -2,9 +2,23 @@ import block_model_editor
 import block_model
 
 
+def test_reblock_two_blocks_weight():
+    block1 = block_model.Block(13.4, 3.7)
+    block2 = block_model.Block(8.7, 2.5)
+    reblocked_block = block_model_editor.reblock_two_blocks(block1, block2)
+    assert round(reblocked_block.weight, 10) == 22.1, "Weight should be 22.1"
+
+
+def test_reblock_two_blocks_grade():
+    block1 = block_model.Block(13.4, 3.7)
+    block2 = block_model.Block(8.7, 2.5)
+    reblocked_block = block_model_editor.reblock_two_blocks(block1, block2)
+    assert round(reblocked_block.grade, 10) == 3.22760181, "Grade should be 3.22760181"
+
+
 def test_model_reblock_empty_model():
     empty_model = block_model.BlockModel()
-    reblocked_model = block_model_editor.reblock_model(empty_model, 4, 4, 4)
+    reblocked_model = block_model_editor.reblock_model(empty_model, (4, 4, 4))
     assert reblocked_model.get_total_block_number() == 0, "Total block number should be 0"
 
 
@@ -26,7 +40,7 @@ def test_model_reblock_total_number():
     blocks.add_block((1, 0, 1), block6)
     blocks.add_block((1, 1, 0), block7)
     blocks.add_block((1, 1, 1), block8)
-    reblocked_model = block_model_editor.reblock_model(blocks, 2, 2, 2)
+    reblocked_model = block_model_editor.reblock_model(blocks, (2, 2, 2))
     assert reblocked_model.get_total_block_number() == 1, "Total number should be 1"
 
 
@@ -40,8 +54,7 @@ def test_model_reblock_not_divisible_by_factor_total_number():
     blocks.add_block((0, 0, 1), block2)
     blocks.add_block((0, 1, 0), block3)
     blocks.add_block((0, 1, 1), block4)
-
-    reblocked_model = block_model_editor.reblock_model(blocks, 2, 2, 2)
+    reblocked_model = block_model_editor.reblock_model(blocks, (2, 2, 2))
     assert reblocked_model.get_total_block_number() == 1, "Total number should be 1"
 
 
@@ -63,7 +76,7 @@ def test_model_reblock_weight():
     blocks.add_block((1, 0, 1), block6)
     blocks.add_block((1, 1, 0), block7)
     blocks.add_block((1, 1, 1), block8)
-    reblocked_model = block_model_editor.reblock_model(blocks, 2, 2, 2)
+    reblocked_model = block_model_editor.reblock_model(blocks, (2, 2, 2))
     assert round(reblocked_model.get_block_at_position((0, 0, 0)).weight, 10) == 98.9, "Weight should be 98.9"
 
 
@@ -85,6 +98,6 @@ def test_model_reblock_grade():
     blocks.add_block((1, 0, 1), block6)
     blocks.add_block((1, 1, 0), block7)
     blocks.add_block((1, 1, 1), block8)
-    reblocked_model = block_model_editor.reblock_model(blocks, 2, 2, 2)
+    reblocked_model = block_model_editor.reblock_model(blocks, (2, 2, 2))
     assert round(reblocked_model.get_block_at_position((0, 0, 0)).grade, 10) == 6.5578361982, \
         "Grade should be 6.5578361982"
