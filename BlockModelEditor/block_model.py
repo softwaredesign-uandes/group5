@@ -72,7 +72,8 @@ class BlockModel:
         max_position_x = 0
         max_position_y = 0
         max_position_z = 0
-        if self.get_total_block_number() == 0:
+        no_blocks = 0
+        if self.get_total_block_number() == no_blocks:
             return max_position_x, max_position_y, max_position_z
         for position in self.blocks:
             if position[0] > max_position_x:
