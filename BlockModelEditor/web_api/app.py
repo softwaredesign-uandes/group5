@@ -19,25 +19,28 @@ block_model_container = BlockModelContainer()
 @app.route('/block_model', methods=['GET', 'POST'])
 def block_model_resource():
     if request.method == 'POST':
-        return load_block_model(request.json)
+        return load_block_model(request.json['block_model'])
     elif request.method == 'GET':
         return get_block_model_statistics()
 
 
-@app.route('/block_model/reblocked_model', methods=['GET'])
+@app.route('/block_model/reblocked_model', methods=['POST'])
 def get_reblocked_model():
     request_body = request.json
     if request_body is None:
         abort(400)
-    blocks_to_group_tuple = (request_body['rx'], request_body['ry'], request_body['rz'])
+    blocks_to_group_tuple = (int(request_body['rx']), int(request_body['ry']), int(request_body['rz']))
     reblocked_model = block_model_editor.reblock_model(block_model_container.loaded_block_model, blocks_to_group_tuple)
-    return convert_block_model_to_json(reblocked_model)
+    json_response = convert_block_model_to_json(reblocked_model)
+    return json_response
 
 
 def load_block_model(block_model_json):
     new_block_model = block_model_editor.import_block_model_from_json_object(block_model_json)
+    if new_block_model is None:
+        abort(400)
     block_model_container.set_block_model(new_block_model)
-    return
+    return "Block Model loaded successfully."
 
 
 def get_block_model_statistics():
