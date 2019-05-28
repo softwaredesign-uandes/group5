@@ -30,6 +30,31 @@ def import_block_model_from_file(filename, data_columns):
     return new_blocks
 
 
+def import_block_model_from_json_object(json_object):
+    new_block_model = block_model.BlockModel()
+    block_collection = json_object['block_model']
+    for block_item in block_collection:
+        position_tuple, block = get_block_from_json_object(block_item)
+        if block is None:
+            return None
+        new_block_model.add_block(position_tuple, block)
+    return new_block_model
+
+
+def get_block_from_json_object(json_object):
+    try:
+        position_x = int(json_object['position_x'])
+        position_y = int(json_object['position_y'])
+        position_z = int(json_object['position_z'])
+        weight = float(json_object['weight'])
+        total_grade = 0
+        for mineral, grade in json_object['grades'].items():
+            total_grade += float(grade)
+        return (position_x, position_y, position_z), block_model.Block(weight, total_grade)
+    except KeyError:
+        return None
+
+
 def get_user_input():
     print("\n[1] Import new Block Model")
     print("[2] Query current Block Model.")
