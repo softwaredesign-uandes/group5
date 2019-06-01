@@ -1,3 +1,13 @@
+class MineralDeposit:
+
+    def __init__(self, name):
+        self.name = name
+        self.block_models = []
+
+    def add_block_model(self, block_model):
+        self.block_models.append(block_model)
+
+
 class VirtualBlock:
 
     @property

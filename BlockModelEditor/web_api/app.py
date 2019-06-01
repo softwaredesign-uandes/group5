@@ -5,6 +5,11 @@ import block_model_editor
 app = Flask(__name__)
 
 
+class MineralDepositContainer:
+    def __init__(self):
+        self.mineral_deposits = []
+
+
 class BlockModelContainer:
     def __init__(self):
         self.loaded_block_model = block_model.BlockModel()
