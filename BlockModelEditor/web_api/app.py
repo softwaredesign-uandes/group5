@@ -5,6 +5,8 @@ from db.models import *
 
 app = Flask(__name__)
 
+create_tables()
+
 
 @app.route('/mineral_deposits', methods=['GET', 'POST'])
 def mineral_deposits_resource():
@@ -36,7 +38,7 @@ def block_model_resource(block_model_id):
 
 
 @app.route('/block_models/<int:block_model_id>/blocks', methods=['GET'])
-def blocks_resource(block_model_id):
+def block_model_blocks_resource(block_model_id):
     return convert_block_model_blocks_to_json(block_model_id)
 
 
