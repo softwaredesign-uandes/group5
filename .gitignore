@@ -74,3 +74,7 @@ BlockModelEditor/__pycache__/
 BlockModelEditor/.idea/
 
 BlockModelEditor/tests/__pycache__/
+
+BlockModelEditor/web_api/__pycache__/
+
+BlockModelEditor/block_models.db
