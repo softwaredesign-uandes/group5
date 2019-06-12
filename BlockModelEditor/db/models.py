@@ -25,9 +25,18 @@ class Block(BaseModel):
     position_y = IntegerField()
     position_z = IntegerField()
     weight = FloatField()
+
+
+class Mineral(BaseModel):
+    name = CharField(unique=True)
+
+
+class BlockMineral(BaseModel):
+    block = ForeignKeyField(Block, backref='minerals')
+    mineral = ForeignKeyField(Mineral, backref='blocks')
     grade = FloatField()
 
 
 def create_tables():
     with database:
-        database.create_tables([MineralDeposit, BlockModel, Block])
+        database.create_tables([MineralDeposit, BlockModel, Block, Mineral, BlockMineral])

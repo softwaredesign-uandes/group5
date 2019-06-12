@@ -98,11 +98,11 @@ def get_block_model_statistics(block_model_id):
     converted_block_model = convert_block_model_from_database_id(block_model_id)
     total_blocks = converted_block_model.get_total_block_number()
     total_weight = converted_block_model.get_total_weight()
-    total_grade = converted_block_model.get_total_grade()
+    total_grades = converted_block_model.get_total_grades()
     air_percentage = converted_block_model.get_air_percentage()
     json_response = jsonify({'total_blocks': total_blocks,
                              'total_weight': total_weight,
-                             'total_grade': total_grade,
+                             'total_grades': total_grades,
                              'air_percentage': air_percentage})
     return json_response
 
@@ -155,7 +155,9 @@ def convert_block_model_from_database_id(block_model_id):
 
 
 def add_to_block_model_from_database_block(block_model_to_add, database_block_object):
-    converted_block = block_model.Block(database_block_object.weight, database_block_object.grade)
+    converted_block = block_model.Block(database_block_object.weight)
+    for mineral_association in database_block_object.minerals:
+        converted_block.add_mineral(mineral_association.minerals.name, mineral_association.grade)
     position_tuple = (database_block_object.position_x, database_block_object.position_y,
                       database_block_object.position_z)
     block_model_to_add.add_block(position_tuple, converted_block)
@@ -181,7 +183,7 @@ def reblock_model(block_model_to_reblock_json):
     blocks_to_group_tuple = (int(block_model_to_reblock_json['rx']), int(block_model_to_reblock_json['ry']),
                              int(block_model_to_reblock_json['rz']))
     converted_block_model = convert_block_model_from_database_id(block_model_id)
-    reblocked_model = block_model_editor.reblock_model(converted_block_model, blocks_to_group_tuple)
+    reblocked_model = block_model_editor.virtual_reblock_model(converted_block_model, blocks_to_group_tuple)
     save_to_database_from_block_model_object(reblocked_model)
 
 

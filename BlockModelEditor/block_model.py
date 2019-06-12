@@ -14,24 +14,38 @@ class VirtualBlock:
     def weight(self):
         raise NotImplementedError
 
+    def mineral_grade(self, mineral_name):
+        raise NotImplementedError
+
     @property
-    def grade(self):
+    def mineral_names(self):
         raise NotImplementedError
 
 
 class Block(VirtualBlock):
 
-    def __init__(self, weight, grade):
+    def __init__(self, weight):
         self._weight = weight
-        self._grade = grade
+        self._minerals = {}
 
     @property
     def weight(self):
         return self._weight
 
     @property
-    def grade(self):
-        return self._grade
+    def mineral_names(self):
+        names = []
+        for mineral_name in self._minerals:
+            names.append(mineral_name)
+        return names
+
+    def mineral_grade(self, mineral_name):
+        if mineral_name in self._minerals:
+            return self._minerals[mineral_name]
+        return 0
+
+    def add_mineral(self, mineral_name, grade):
+        self._minerals[mineral_name] = grade
 
 
 class BlockGroup(VirtualBlock):
@@ -45,8 +59,15 @@ class BlockGroup(VirtualBlock):
         return sum(weights)
 
     @property
-    def grade(self):
-        weighted_grades = map(lambda x: x.weight * x.grade, self.blocks)
+    def mineral_names(self):
+        all_names = map(lambda x: x.mineral_names, self.blocks)
+        names_without_repeats = []
+        map(lambda x: map(lambda y: names_without_repeats.append(y) if y not in names_without_repeats else None, x),
+            all_names)
+        return names_without_repeats
+
+    def mineral_grade(self, mineral_name):
+        weighted_grades = map(lambda x: x.weight * x.mineral_grade(mineral_name), self.blocks)
         weight = self.weight
         return sum(weighted_grades) / weight if weight > 0 else 0
 
@@ -110,8 +131,23 @@ class BlockModel:
             air_proportion = air_block_count / total_blocks
         return 100 * air_proportion
 
-    def get_total_grade(self):
+    def get_all_minerals(self):
+        names = []
+        for position in self.blocks:
+            for mineral_name in self.blocks[position].mineral_names:
+                if mineral_name not in names:
+                    names.append(mineral_name)
+        return names
+
+    def get_total_mineral_grade(self, mineral_name):
         total_grade = 0
         for position in self.blocks:
-            total_grade += self.blocks[position].grade
+            total_grade += self.blocks[position].mineral_grade(mineral_name)
         return total_grade
+
+    def get_total_grades(self):
+        grades = {}
+        mineral_names = self.get_all_minerals()
+        for mineral_name in mineral_names:
+            grades[mineral_name] = self.get_total_mineral_grade(mineral_name)
+        return grades
