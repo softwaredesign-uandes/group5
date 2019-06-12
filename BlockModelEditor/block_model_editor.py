@@ -30,6 +30,25 @@ def import_block_model_from_file(filename, data_columns):
     return new_blocks
 
 
+def import_block_model_from_json_object(json_object):
+    new_block_model = block_model.BlockModel()
+    try:
+        for i in range(len(json_object['x_positions'])):
+            if json_object['x_positions'][i] == '':
+                continue
+            position_tuple = (int(json_object['x_positions'][i]), int(json_object['y_positions'][i]),
+                              int(json_object['z_positions'][i]))
+            weight = float(json_object['weights'][i])
+            grade = 0
+            for mineral_grades in json_object['grades']:
+                grade += float(mineral_grades[i])
+            block = block_model.Block(weight, grade)
+            new_block_model.add_block(position_tuple, block)
+        return new_block_model
+    except TypeError:
+        return None
+
+
 def get_user_input():
     print("\n[1] Import new Block Model")
     print("[2] Query current Block Model.")
@@ -111,7 +130,9 @@ def reblock_two_blocks(first_block, second_block):
     second_block_weight = second_block.weight if second_block is not None else 0
     second_block_grade = second_block.grade if second_block is not None else 0
     new_weight = first_block_weight + second_block_weight
-    new_grade = (first_block_grade * first_block_weight + second_block_grade * second_block_weight) / new_weight
+    new_grade = 0
+    if new_weight != 0:
+        new_grade = (first_block_grade * first_block_weight + second_block_grade * second_block_weight) / new_weight
     return block_model.Block(new_weight, new_grade)
 
 

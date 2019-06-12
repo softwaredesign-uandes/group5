@@ -91,10 +91,14 @@ class BlockModel:
 
     def get_air_percentage(self):
         air_block_count = 0
-        for position in self.blocks:
-            if self.blocks[position].weight == 0:
-                air_block_count += 1
-        return 100 * (air_block_count / self.get_total_block_number())
+        total_blocks = self.get_total_block_number()
+        air_proportion = 1
+        if total_blocks > 0:
+            for position in self.blocks:
+                if self.blocks[position].weight == 0:
+                    air_block_count += 1
+            air_proportion = air_block_count / total_blocks
+        return 100 * air_proportion
 
     def get_total_grade(self):
         total_grade = 0
