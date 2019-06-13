@@ -41,7 +41,7 @@ def blocks_resource(block_model_id):
 
 
 @app.route('/block_models/<int:block_model_id>/blocks/<int:block_id>', methods=['GET'])
-def blocks_resource(block_model_id, block_id):
+def block_resource(block_model_id, block_id):
     converted_block_model = convert_block_model_blocks_to_json(block_model_id)
     dimensions_tuple = converted_block_model.get_model_dimensions()
     position_tuple = unflatten_block_id(dimensions_tuple[0], dimensions_tuple[1], block_id)
