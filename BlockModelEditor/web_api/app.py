@@ -70,12 +70,14 @@ def save_new_block_model_from_json(block_model_json):
             position_y = int(block_model_json['y_positions'][i])
             position_z = int(block_model_json['z_positions'][i])
             weight = float(block_model_json['weights'][i])
-            grade = 0
-            for mineral_grades in block_model_json['grades']:
-                grade += float(mineral_grades[i])
             block = Block(position_x=position_x, position_y=position_y, position_z=position_z, weight=weight,
-                          grade=grade, block_model=new_block_model)
+                          block_model=new_block_model)
             block.save()
+            mineral_grades = block_model_json['grades']
+            for mineral_name in mineral_grades:
+                mineral, created = Mineral.get_or_create(name=mineral_name)
+                grade = float(mineral_grades[mineral_name])
+                BlockMineral.create(mineral=mineral, block=block, grade=grade)
     except TypeError:
         new_block_model.delete_instance(recursive=True)
         database.close()
@@ -114,13 +116,14 @@ def convert_block_model_blocks_to_json(block_model_id):
     y_positions = []
     z_positions = []
     weights = []
-    grades = []
+    grades = {}
     for block in blocks:
         x_positions.append(block.position_x)
         y_positions.append(block.position_y)
         z_positions.append(block.position_z)
         weights.append(block.weight)
-        grades.append(block.grade)
+        for mineral_association in block.minerals:
+            grades[mineral_association.mineral.name] = mineral_association.grade
     return jsonify({'x_positions': x_positions,
                     'y_positions': y_positions,
                     'z_positions': z_positions,
@@ -171,10 +174,14 @@ def save_to_database_from_block_model_object(block_model_object):
         position_y = position_tuple[1]
         position_z = position_tuple[1]
         weight = block_model_object[position_tuple].weight
-        grade = block_model_object[position_tuple].grade
         block = Block(position_x=position_x, position_y=position_y, position_z=position_z, weight=weight,
-                      grade=grade, block_model=new_block_model)
+                      block_model=new_block_model)
         block.save()
+        mineral_names = block_model_object[position_tuple].mineral_names
+        for mineral_name in mineral_names:
+            mineral, created = Mineral.get_or_create(name=mineral_name)
+            grade = block_model_object[position_tuple].mineral_grade(mineral_name)
+            BlockMineral.create(mineral=mineral, block=block, grade=grade)
     database.close()
 
 
