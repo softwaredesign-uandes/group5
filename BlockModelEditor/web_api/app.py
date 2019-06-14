@@ -61,7 +61,8 @@ def save_new_mineral_deposit_from_json(mineral_deposit_json):
 
 def save_new_block_model_from_json(block_model_json):
     database.connect()
-    new_block_model = BlockModel().create()
+    mineral_deposit_id = block_model_json['deposit_id']
+    new_block_model = BlockModel().create(mineral_deposit=mineral_deposit_id)
     try:
         for i in range(len(block_model_json['x_positions'])):
             if block_model_json['x_positions'][i] == '':
