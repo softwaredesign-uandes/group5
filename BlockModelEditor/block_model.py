@@ -93,7 +93,7 @@ class BlockModel:
         try:
             value = self.blocks[position_tuple]
         except KeyError:
-            value = None
+            value = Block(0)
         return value
 
     def get_total_block_number(self):

@@ -1,4 +1,4 @@
-var server_url = "http://5726d6e0.ngrok.io";
+var server_url = "http://84df39f4.ngrok.io";
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -48,20 +48,47 @@ function showStatisticsDialog() {
 
 }
 
-function getBlockModelStatistics() {
-  var statistics = UrlFetchApp.fetch(server_url + "/block_model");
-  return JSON.parse(statistics.getContentText());
+function getMineralDeposits() {
+  var deposits = UrlFetchApp.fetch(server_url + "/mineral_deposits");
+  return JSON.parse(deposits.getContentText());
 }
 
-function sendBlockModel(columns) {
-  var url = server_url + "/block_model"
-  var payload = convertColumnsToJson(columns);
+function addMineralDeposit(depositName) {
+  var url = server_url + "/mineral_deposits"
+  var payload = JSON.stringify({"mineral_deposit": {"name": depositName}});
   var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
   var response = UrlFetchApp.fetch(url, options);
 }
 
+function getBlockModels() {
+  var deposits = UrlFetchApp.fetch(server_url + "/block_models");
+  return JSON.parse(deposits.getContentText());
+}
+
+function addBlockModel(columns, ores, depositId) {
+  var url = server_url + "/block_models"
+  var payload = convertColumnsToJson(columns, ores, depositId);
+  var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
+  var response = UrlFetchApp.fetch(url, options);
+}
+
+function getBlockModelStatistics(blockModelId) {
+  var statistics = UrlFetchApp.fetch(server_url + "/block_models/" + blockModelId);
+  return JSON.parse(statistics.getContentText());
+}
+
+function getBlockModelBlocks(blockModelId) {
+  var blocks = UrlFetchApp.fetch(server_url + "/block_models/" + blockModelId + "/blocks");
+  return JSON.parse(blocks.getContentText());
+}
+
+function getBlock(blockModelId, blockId) {
+  var block = UrlFetchApp.fetch(server_url + "/block_models/" + blockModelId + "/blocks/" + blockId);
+  return JSON.parse(block.getContentText());
+}
+
 function getReblockedModel(rx, ry, rz) {
-  var url = server_url + "/block_model/reblocked_model"
+  var url = server_url + "/block_models"
   var payload = JSON.stringify({ 'rx': rx, 'ry': ry, 'rz': rz });
   var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
   var response = UrlFetchApp.fetch(url, options);
@@ -84,18 +111,18 @@ function createNewSheetForModel(json_block_model, sheetName) {
   }
 }
 
-function convertColumnsToJson(columns) {
+function convertColumnsToJson(columns, ores, depositId) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet();
   var xPositions = sheet.getRange(columns[0]).getValues().map(function(e){return e[0];});
   var yPositions = sheet.getRange(columns[1]).getValues().map(function(e){return e[0];});
   var zPositions = sheet.getRange(columns[2]).getValues().map(function(e){return e[0];});
   var weights = sheet.getRange(columns[3]).getValues().map(function(e){return e[0];});
-  var grades = [];
+  var grades = {};
   for (var i = 0; i < columns[4].length; i++) 
     {
-      grades.push(sheet.getRange(columns[4][i]).getValues().map(function(e){return e[0];}));
+      grades[ores[i]] = sheet.getRange(columns[4][i]).getValues().map(function(e){return e[0];});
     }
-  var jsonObject = {'block_model': { 'x_positions': xPositions, 'y_positions': yPositions, 'z_positions': zPositions, 
+  var jsonObject = {'deposit_id': depositId, 'block_model': { 'x_positions': xPositions, 'y_positions': yPositions, 'z_positions': zPositions, 
                                     'weights': weights, 'grades': grades }}
   return JSON.stringify(jsonObject);
 }

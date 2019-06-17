@@ -37,6 +37,7 @@ class BlockMineral(BaseModel):
     grade = FloatField()
 
 
-def create_tables():
+def reset_database():
     with database:
+        database.drop_tables([MineralDeposit, BlockModel, Block, Mineral, BlockMineral])
         database.create_tables([MineralDeposit, BlockModel, Block, Mineral, BlockMineral])
