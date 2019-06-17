@@ -92,13 +92,21 @@
 				blocksJson = {{ input_blocks|tojson }};
 				blocks = [];
 				for(var i=0; i<blocksJson.x_positions.length; i++) {
+					auGrade = 0;
+					cuGrade = 0;
+					if(blocksJson.grades.hasOwnProperty('Gold')) {
+						auGrade = blocksJson.grades.Gold[i];
+					}
+					if(blocksJson.grades.hasOwnProperty('Copper')) {
+						cuGrade = blocksJson.grades.Copper[i];
+					}
 					blocks.push({
 						"x_index": blocksJson.x_positions[i],
 						"y_index": blocksJson.y_positions[i],
 						"z_index": blocksJson.z_positions[i],
 						"grades": {
-							"au" : blocksJson.grades.Gold[i],
-							"cu" : 0,
+							"au" : auGrade,
+							"cu" : cuGrade,
 						}
 					});
 				}
