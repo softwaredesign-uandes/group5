@@ -125,10 +125,14 @@ class BlockModel:
         total_blocks = self.get_total_block_number()
         air_proportion = 1
         if total_blocks > 0:
-            for position in self.blocks:
-                if self.blocks[position].weight == 0:
-                    air_block_count += 1
-            air_proportion = air_block_count / total_blocks
+            dimensions = self.get_model_dimensions()
+            for i in range(dimensions[0]):
+                for j in range(dimensions[1]):
+                    for k in range(dimensions[2]):
+                        if self.get_block_at_position((i, j, k)).weight == 0:
+                            air_block_count += 1
+            total_spaces = dimensions[0] * dimensions[1] * dimensions[2]
+            air_proportion = air_block_count / total_spaces
         return 100 * air_proportion
 
     def get_all_minerals(self):

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<title>three.js webgl - interactive - voxel painter</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+		<style>
+			body {
+				background-color: #f0f0f0;
+				color: #444;
+			}
+			a {
+				color: #08f;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="{{ url_for('static', filename='three.js') }}"></script>
+		<script src="{{ url_for('static', filename='orbitControl.js') }}"></script>
+
+		<script src="{{ url_for('static', filename='WebGL.js') }}"></script>
+
+		<script>
+			if ( WEBGL.isWebGLAvailable() === false ) {
+				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+			}
+			var camera, scene, renderer;
+			var controls;
+			var cubeGeometry;
+			var blockMeshes = [];
+			var blocks;
+			var blockSize = 50;
+			var currentGrade = "au";
+			var transparent = false;
+			init();
+			animate();
+			function init() {
+				createScene();
+				createLights();
+				createObjects();
+				createCamera();
+				createRenderer();
+				createCameraControls();
+				setEventListeners();
+			}
+			function createScene() {
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xf0f0f0 );
+			}
+			function createLights() {
+				var ambientLight = new THREE.AmbientLight( 0x606060 );
+				scene.add( ambientLight );
+				var light = new THREE.PointLight( 0xffffff );
+				light.position.set( 1000, 1000, 1000 );
+				scene.add( light );
+			}
+			function createObjects() {
+				function generateBlocks() {
+					blocks = [];
+					var xSize = 20;
+					var ySize = 20;
+					var zSize = 10;
+					for(var i=0; i<xSize; i++) {
+						for(var j=0; j<ySize; j++) {
+							for(var k=0; k<zSize; k++) {
+								var cuGrade = 0.0;
+								var auGrade = 0.0;
+								if(isBlockInCore(i, j, k, xSize, ySize, zSize)) {
+									cuGrade += Math.random() / 2.0;
+									auGrade += Math.random() / 2.0;
+								}
+								blocks.push({
+									"x_index": i,
+									"y_index": j,
+									"z_index": k,
+									"grades": {
+										"au" : auGrade,
+										"cu" : cuGrade,
+									}
+								});
+							}
+						}
+					}
+				}
+				function isBlockInCore(i, j, k, xSize, ySize, zSize){
+					return i > (1.0/3.0) * xSize && i < (2.0/3.0) * xSize && j > (1.0/3.0) * ySize && 
+						j < (2.0/3.0) * ySize && k < (1.0/3.0) * zSize;
+				}
+				cubeGeometry = new THREE.BoxBufferGeometry( blockSize, blockSize, blockSize );
+				console.log("Step");
+				blocksJson = {{ input_blocks|tojson }};
+				blocks = [];
+				console.log(blocksJson.x_positions.length);
+				for(var i=0; i<blocksJson.x_positions.length; i++) {
+					blocks.push({
+						"x_index": blocksJson.x_positions[i],
+						"y_index": blocksJson.y_positions[i],
+						"z_index": blocksJson.z_positions[i],
+						"grades": {
+							"au" : blocksJson.grades.Gold[i],
+							"cu" : blocksJson.grades.Copper[i],
+						}
+					});
+				}
+				loadBlockModel();
+			}
+			function loadBlockModel() {
+				function addBlock(block) {
+					var cubeMaterial = new THREE.MeshLambertMaterial( { color: getBlockColor(block), 
+						opacity: Math.max(0.02, block.grades[currentGrade]), transparent: transparent } );
+					var blockMesh = new THREE.Mesh( cubeGeometry, cubeMaterial );
+					
+					var blockSizeWithOffset = blockSize * 1.1;
+					blockMesh.position.set( blockSizeWithOffset * block.x_index,
+						blockSizeWithOffset * block.y_index, blockSizeWithOffset * block.z_index);
+					blockMeshes.push(blockMesh);
+		
+					scene.add( blockMesh );
+					
+				}
+				function getBlockColor(block) {
+					if (block.grades[currentGrade] < 0.001)
+						return new THREE.Color(0x999999);
+					var hue = currentGrade == "cu" ? 168 : 50;
+					var lightning = Math.floor(block.grades[currentGrade] * 70);
+					var hsl = "hsl("+ hue + ", 100%, " + lightning + "%)";
+					return new THREE.Color(hsl);
+				}
+				clearScene();
+				for(var i=0; i<blocks.length; i++) {
+					addBlock(blocks[i]);
+				}
+			}
+			function createCamera() {
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 2000, 2000, 3300 );
+				camera.lookAt( 0, 0, 0 );
+				camera.up.set(0, 0, 1);
+				scene.add(camera);
+			}
+			function createRenderer() {
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+			}
+			function createCameraControls() {
+				controls = new THREE.OrbitControls( camera, renderer.domElement );
+				controls.update();
+			}
+			function setEventListeners() {
+				window.addEventListener( 'resize', onWindowResize, false );
+				document.addEventListener( 'keydown', onDocumentKeyDown, false );
+			}
+			function clearScene() {
+				for(var i=0; i<blockMeshes.length; i++) {
+					scene.remove(blockMeshes[i]);
+				}; 
+			}
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+			function onDocumentKeyDown( event ) {
+				switch ( event.keyCode ) {
+					case 65: //a
+						currentGrade = "au";
+						loadBlockModel();
+						break;
+					case 67: //c
+						currentGrade = "cu";
+						loadBlockModel();
+						break;
+					case 84: //t
+						transparent = !transparent;
+						loadBlockModel();
+						break;
+				}
+			}
+			function animate() {
+				requestAnimationFrame( animate );
+				controls.update();
+				renderer.render( scene, camera );
+			}
+		</script>
+		
+</body></html>

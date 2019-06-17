@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, abort
+from flask import Flask, request, jsonify, abort, render_template
 import block_model
 import block_model_editor
 from db.models import *
@@ -36,9 +36,15 @@ def block_model_resource(block_model_id):
     return get_block_model_statistics(block_model_id)
 
 
+@app.route('/block_models/<int:block_model_id>/visualize', methods=['GET'])
+def block_model_resource_visualization(block_model_id):
+    blocks = convert_block_model_blocks_to_json(block_model_id)
+    return render_template('blocks.html', input_blocks=blocks)
+
+
 @app.route('/block_models/<int:block_model_id>/blocks', methods=['GET'])
 def blocks_resource(block_model_id):
-    return convert_block_model_blocks_to_json(block_model_id)
+    return jsonify(convert_block_model_blocks_to_json(block_model_id))
 
 
 @app.route('/block_models/<int:block_model_id>/blocks/<int:flattened_block_id>', methods=['GET'])
@@ -157,12 +163,8 @@ def convert_block_model_blocks_to_json(block_model_id):
         for mineral_name in grade_info[block_id]:
             grades[mineral_name].append(grade_info[block_id][mineral_name])
     database.close()
-    return jsonify({'block_ids': flattened_block_ids,
-                    'x_positions': x_positions,
-                    'y_positions': y_positions,
-                    'z_positions': z_positions,
-                    'weights': weights,
-                    'grades': grades})
+    return {'block_ids': flattened_block_ids, 'x_positions': x_positions, 'y_positions': y_positions,
+            'z_positions': z_positions, 'weights': weights, 'grades': grades}
 
 
 def convert_mineral_deposits_to_json():
