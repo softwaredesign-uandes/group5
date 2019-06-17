@@ -74,7 +74,7 @@ def test_block_model_add_and_get_failure():
     blocks = block_model.BlockModel()
     blocks.add_block((2, 5, 8), test_blocks[0])
     saved_block = blocks.get_block_at_position((2, 5, 7))
-    assert saved_block is None, "Block should be None"
+    assert saved_block.weight == 0, "Block weight should be 0"
 
 
 def test_block_model_get_total_blocks():
@@ -101,10 +101,10 @@ def test_block_model_get_total_weight():
 
 def test_block_model_get_air_percentage():
     blocks = block_model.BlockModel()
-    blocks.add_block((2, 5, 8), test_blocks[0])
-    blocks.add_block((6, 3, 9), test_blocks[1])
-    blocks.add_block((1, 14, 12), test_blocks[2])
-    blocks.add_block((10, 14, 11), test_blocks[3])
+    blocks.add_block((0, 0, 0), test_blocks[0])
+    blocks.add_block((0, 0, 1), test_blocks[1])
+    blocks.add_block((0, 1, 0), test_blocks[2])
+    blocks.add_block((0, 1, 1), test_blocks[3])
     assert blocks.get_air_percentage() == 25, "Air percentage should be 25%"
 
 

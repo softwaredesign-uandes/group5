@@ -89,10 +89,8 @@
 						j < (2.0/3.0) * ySize && k < (1.0/3.0) * zSize;
 				}
 				cubeGeometry = new THREE.BoxBufferGeometry( blockSize, blockSize, blockSize );
-				console.log("Step");
 				blocksJson = {{ input_blocks|tojson }};
 				blocks = [];
-				console.log(blocksJson.x_positions.length);
 				for(var i=0; i<blocksJson.x_positions.length; i++) {
 					blocks.push({
 						"x_index": blocksJson.x_positions[i],
@@ -100,7 +98,7 @@
 						"z_index": blocksJson.z_positions[i],
 						"grades": {
 							"au" : blocksJson.grades.Gold[i],
-							"cu" : blocksJson.grades.Copper[i],
+							"cu" : 0,
 						}
 					});
 				}

@@ -33,7 +33,7 @@ function handleSendForm(formValues) {
 }
 
 function handleReblockForm(formValues) {
-  getReblockedModel(formValues.rx, formValues.ry, formValues.rz);
+  saveReblockedModel(formValues.rx, formValues.ry, formValues.rz);
 }
 
 function showStatisticsDialog() {
@@ -87,12 +87,11 @@ function getBlock(blockModelId, blockId) {
   return JSON.parse(block.getContentText());
 }
 
-function getReblockedModel(rx, ry, rz) {
-  var url = server_url + "/block_models"
-  var payload = JSON.stringify({ 'rx': rx, 'ry': ry, 'rz': rz });
+function saveReblockedModel(blockModelId, rx, ry, rz) {
+  var url = server_url + "/block_models";
+  var payload = JSON.stringify({ 'base_block_model_id': blockModelId, 'rx': rx, 'ry': ry, 'rz': rz });
   var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
   var response = UrlFetchApp.fetch(url, options);
-  createNewSheetForModel(JSON.parse(response.getContentText()), "Reblocked Model");
 }
 
 function createNewSheetForModel(json_block_model, sheetName) {
@@ -106,8 +105,11 @@ function createNewSheetForModel(json_block_model, sheetName) {
   
   newSheet.clear();
   for (var i = 0; i < json_block_model.x_positions.length; i++) {
-    newSheet.appendRow([json_block_model.x_positions[i], json_block_model.y_positions[i], json_block_model.z_positions[i],
-                       json_block_model.weights[i], json_block_model.grades[i]]);
+    newRow = [json_block_model.x_positions[i], json_block_model.y_positions[i], json_block_model.z_positions[i], json_block_model.weights[i]];
+    for (var mineralName in json_block_model.grades) {
+      newRow.push(json_block_model.grades[mineralName][i])
+    }
+    newSheet.appendRow(newRow);
   }
 }
 

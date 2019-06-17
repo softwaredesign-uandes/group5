@@ -60,10 +60,11 @@ class BlockGroup(VirtualBlock):
 
     @property
     def mineral_names(self):
-        all_names = map(lambda x: x.mineral_names, self.blocks)
+        all_names = list(map(lambda x: x.mineral_names, self.blocks))
         names_without_repeats = []
-        map(lambda x: map(lambda y: names_without_repeats.append(y) if y not in names_without_repeats else None, x),
-            all_names)
+        list(map(lambda x:
+                 list(map(lambda y: names_without_repeats.append(y) if y not in names_without_repeats else None, x)),
+                 all_names))
         return names_without_repeats
 
     def mineral_grade(self, mineral_name):

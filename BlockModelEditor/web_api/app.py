@@ -22,10 +22,10 @@ def mineral_deposit_resource(mineral_deposit_id):
 @app.route('/block_models', methods=['GET', 'POST'])
 def block_models_resource():
     if request.method == 'POST':
-        mineral_deposit_id = request.json['deposit_id']
+        if 'base_block_model_id' in request.json:
+            return reblock_model(request.json)
         block_model_json = request.json['block_model']
-        if 'base_block_model_id' in block_model_json:
-            return reblock_model(block_model_json)
+        mineral_deposit_id = request.json['deposit_id']
         return save_new_block_model_from_json(mineral_deposit_id, block_model_json)
     elif request.method == 'GET':
         return convert_block_models_to_json()
@@ -76,7 +76,7 @@ def save_new_block_model_from_json(mineral_deposit_id, block_model_json):
     try:
         with database.atomic():
             for i in range(len(block_model_json['x_positions'])):
-                if block_model_json['x_positions'][i] == '':
+                if block_model_json['x_positions'][i] == '' or block_model_json['weights'][i] <= 0:
                     continue
                 position_x = int(block_model_json['x_positions'][i])
                 position_y = int(block_model_json['y_positions'][i])
@@ -143,12 +143,15 @@ def convert_block_model_blocks_to_json(block_model_id):
             grades[mineral_name] = []
     for block_tuple in block_tuples:
         block_id = block_tuple[0]
+        weight = block_tuple[5]
+        if weight <= 0:
+            continue
         if block_id not in block_ids:
             block_ids.append(block_id)
             x_positions.append(block_tuple[2])
             y_positions.append(block_tuple[3])
             z_positions.append(block_tuple[4])
-            weights.append(block_tuple[5])
+            weights.append(weight)
             grade_info[block_id] = {}
             for mineral_name in grades:
                 grade_info[block_id][mineral_name] = 0
@@ -197,6 +200,14 @@ def convert_block_model_from_database_id(block_model_id):
     return converted_block_model
 
 
+def get_mineral_deposit_id_from_block_model_id(block_model_id):
+    database.connect()
+    retrieved_block_model = BlockModel.get_by_id(block_model_id)
+    mineral_deposit_id = retrieved_block_model.mineral_deposit_id
+    database.close()
+    return mineral_deposit_id
+
+
 def add_to_block_model_from_database_block(block_model_to_add, database_block_tuple):
     position_x = database_block_tuple[2]
     position_y = database_block_tuple[3]
@@ -213,22 +224,25 @@ def add_to_block_model_from_database_block(block_model_to_add, database_block_tu
         block_model_to_add.add_block(position_tuple, converted_block)
 
 
-def save_to_database_from_block_model_object(block_model_object):
+def save_to_database_from_block_model_object(mineral_deposit_id, block_model_object):
     database.connect()
-    new_block_model = BlockModel().create()
-    for position_tuple in block_model_object.blocks:
-        position_x = position_tuple[0]
-        position_y = position_tuple[1]
-        position_z = position_tuple[1]
-        weight = block_model_object[position_tuple].weight
-        block = Block(position_x=position_x, position_y=position_y, position_z=position_z, weight=weight,
-                      block_model=new_block_model)
-        block.save()
-        mineral_names = block_model_object[position_tuple].mineral_names
-        for mineral_name in mineral_names:
-            mineral, created = Mineral.get_or_create(name=mineral_name)
-            grade = block_model_object[position_tuple].mineral_grade(mineral_name)
-            BlockMineral.create(mineral=mineral, block=block, grade=grade)
+    new_block_model = BlockModel.create(mineral_deposit_id=mineral_deposit_id)
+    with database.atomic():
+        for position_tuple in block_model_object.blocks:
+            position_x = position_tuple[0]
+            position_y = position_tuple[1]
+            position_z = position_tuple[2]
+            weight = block_model_object.get_block_at_position(position_tuple).weight
+            if weight <= 0:
+                continue
+            block = Block(position_x=position_x, position_y=position_y, position_z=position_z, weight=weight,
+                          block_model=new_block_model)
+            block.save()
+            mineral_names = block_model_object.get_block_at_position(position_tuple).mineral_names
+            for mineral_name in mineral_names:
+                mineral, created = Mineral.get_or_create(name=mineral_name)
+                grade = block_model_object.get_block_at_position(position_tuple).mineral_grade(mineral_name)
+                BlockMineral.create(mineral=mineral, block=block, grade=grade)
     database.close()
 
 
@@ -238,7 +252,9 @@ def reblock_model(block_model_to_reblock_json):
                              int(block_model_to_reblock_json['rz']))
     converted_block_model = convert_block_model_from_database_id(block_model_id)
     reblocked_model = block_model_editor.virtual_reblock_model(converted_block_model, blocks_to_group_tuple)
-    save_to_database_from_block_model_object(reblocked_model)
+    mineral_deposit_id = get_mineral_deposit_id_from_block_model_id(block_model_id)
+    save_to_database_from_block_model_object(mineral_deposit_id, reblocked_model)
+    return 'Block Model reblocked successfully.'
 
 
 def flatten_block_id(model_length, model_width, position_tuple):
