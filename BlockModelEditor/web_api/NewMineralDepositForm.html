@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+  </head>
+  <body>
+    <form id="sendForm" onsubmit="event.preventDefault(); google.script.run.handleMineralDepositForm(this); google.script.host.close()">
+      Mineral Deposit Name:
+      <input type="text" name="mineralDepositName"><br><br>
+      <input type="submit" value="Submit">
+    </form>
+    <input type="button" value="Cancel" onclick="google.script.host.close()" />
+  </body>
+</html>

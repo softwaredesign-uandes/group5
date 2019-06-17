@@ -3,15 +3,27 @@ var server_url = "http://84df39f4.ngrok.io";
 function onOpen() {
   SpreadsheetApp.getUi()
       .createMenu('Block Model')
+      .addItem('Create Mineral Deposit', 'openMineralDepositDialog')
       .addItem('Load Into System', 'openSendConfigurationDialog')
-      .addItem('Get Block Model Statistics', 'showStatisticsDialog')
-      .addItem('Get Reblocked Model', 'openReblockModelDialog')
+      .addItem('Get Block Models', 'showBlockModelsDialog')
+      .addItem('Get Block Model Statistics', 'openStatisticsForm')
+      .addItem('Reblock Model', 'openReblockModelDialog')
       .addToUi();
 }
 
 function openSendConfigurationDialog() {
   var html = HtmlService.createHtmlOutputFromFile('BlockModelLoadForm');
   SpreadsheetApp.getUi().showModalDialog(html, 'Load Block Model');
+}
+
+function openMineralDepositDialog() {
+  var html = HtmlService.createHtmlOutputFromFile('NewMineralDepositForm');
+  SpreadsheetApp.getUi().showModalDialog(html, 'New Mineral Deposit');
+}
+
+function openStatisticsForm() {
+  var html = HtmlService.createHtmlOutputFromFile('ModelStatisticsForm');
+  SpreadsheetApp.getUi().showModalDialog(html, 'Get Block Model Statistics');
 }
 
 function openReblockModelDialog() {
@@ -32,15 +44,43 @@ function handleSendForm(formValues) {
   sendBlockModel(columns);
 }
 
-function handleReblockForm(formValues) {
-  saveReblockedModel(formValues.rx, formValues.ry, formValues.rz);
+function handleMineralDepositForm(formValues) {
+  addMineralDeposit(formValues.mineralDepositName);
 }
 
-function showStatisticsDialog() {
-  var statistics = getBlockModelStatistics();
+function handleStatisticsForm(formValues) {
+  showStatisticsDialog(formValues.blockModelId);
+}
+
+function handleReblockForm(formValues) {
+  saveReblockedModel(formValues.blockModelId, formValues.rx, formValues.ry, formValues.rz);
+}
+
+function showBlockModelsDialog() {
+  var request = getBlockModels();
+  var mineralDeposits = request.mineral_deposits;
+  var blockModelsText = "";
+  for(var mineralDeposit in mineralDeposits) {
+    blockModelsText += mineralDeposits[mineralDeposit].mineral_deposit_id + " - " + mineralDeposit + ": ";
+    for(var i = 0; i < mineralDeposits[mineralDeposit].block_models.length; i++) {
+      blockModelsText += mineralDeposits[mineralDeposit].block_models[i].id + ", ";
+    }
+    blockModelsText += "\n";
+  }
+  
+  var ui = SpreadsheetApp.getUi();
+  var result = ui.alert('Block Models', blockModelsText, ui.ButtonSet.OK);
+
+}
+
+function showStatisticsDialog(blockModelId) {
+  var statistics = getBlockModelStatistics(blockModelId);
   var statisticsText = "Total Number of Blocks: " + statistics.total_blocks;
   statisticsText += "\nTotal Weight: " + statistics.total_weight;
-  statisticsText += "\nTotal Grade: " + statistics.total_grade;
+  statisticsText += "\nTotal Grade: ";
+  for(var mineralName in statistics.total_grades) {
+    statisticsText += mineralName + ": " + statistics.total_grades[mineralName] + ", ";
+  }
   statisticsText += "\nPercentage of Air: " + statistics.air_percentage + "%";
   
   var ui = SpreadsheetApp.getUi();

@@ -184,7 +184,8 @@ def convert_block_models_to_json():
     mineral_deposits_json = {}
     for deposit in mineral_deposits:
         block_models = BlockModel.select().where(BlockModel.mineral_deposit == deposit)
-        mineral_deposits_json[deposit.name] = {'block_models': list(map(lambda x: {'id': x.id}, block_models))}
+        mineral_deposits_json[deposit.name] = {'mineral_deposit_id': deposit.id,
+                                               'block_models': list(map(lambda x: {'id': x.id}, block_models))}
     database.close()
     return jsonify({'mineral_deposits': mineral_deposits_json})
 

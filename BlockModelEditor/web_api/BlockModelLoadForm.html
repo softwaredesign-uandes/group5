@@ -2,23 +2,73 @@
 <html>
   <head>
     <base target="_top">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
   </head>
   <body>
-    <div>Column Definitions:</div>
-    <form id="sendForm" onsubmit="event.preventDefault(); google.script.run.handleSendForm(this); google.script.host.close()">
-      X Position Column:
-      <input type="text" name="xPositionColumn"><br><br>
-      Y Position Column:
-      <input type="text" name="yPositionColumn"><br><br>
-      Z Position Column:
-      <input type="text" name="zPositionColumn"><br><br>
-      Total Weight Column:
-      <input type="text" name="weightColumn"><br><br>
-      Mineral Grade Columns (Separated by commas):
-      <input type="text" name="gradeColumns"><br><br>
-      <input type="submit" value="Submit">
-    </form>
-    <input type="button" value="Cancel" onclick="google.script.host.close()" />
+    <div class="container">
+      <div class="row">
+        <div class="col controls">
+          <h4>Column Definitions</h4>
+          <form id="sendForm" role="form" onsubmit="event.preventDefault(); google.script.run.handleSendForm(this); google.script.host.close()">
+            <h6>Mineral Deposit ID:</h6>
+            <input type="text" name="mineralDepositId"><br><br>
+            <h6>X Position Column:</h6>
+            <input type="text" name="xPositionColumn"><br><br>
+            <h6>Y Position Column:</h6>
+            <input type="text" name="yPositionColumn"><br><br>
+            <h6>Z Position Column:</h6>
+            <input type="text" name="zPositionColumn"><br><br>
+            <h6>Total Weight Column:</h6>
+            <input type="text" name="weightColumn"><br><br>
+            <h6>Mineral Grade Columns (Separated by commas):</h6>
+            <div class="row entry input-group">
+              <div class="col-3">
+                <label class="label" for="mineralName">Mineral Name</label>
+              </div>
+              <div class="col-3">
+                <input type="text" name="mineralName">
+              </div>
+              <div class="col-3">
+                <input type="text" name="gradeColumns">
+              </div>
+              <div class="col-3">
+                <button class="btn btn-success btn-add" type="button">
+                  Add Mineral
+                </button>
+              </div>
+            </div>
+            <input type="submit" value="Submit">
+          </form>
+          <input type="button" value="Cancel" onclick="google.script.host.close()" />
+        </div>
+      </div>
+    </div>
   </body>
+  
+  <script>
+    $(function()
+    {
+        $(document).on('click', '.btn-add', function(e)
+        {
+            e.preventDefault();
+
+            var controlForm = $('.controls form:first'),
+                currentEntry = $(this).parents('.entry:first'),
+                newEntry = $(currentEntry.clone()).appendTo(controlForm);
+
+            newEntry.find('input').val('');
+            controlForm.find('.entry:not(:last) .btn-add')
+                .removeClass('btn-add').addClass('btn-remove')
+                .removeClass('btn-success').addClass('btn-danger')
+                .html('<span class="glyphicon glyphicon-minus"></span>');
+        }).on('click', '.btn-remove', function(e)
+        {
+		    $(this).parents('.entry:first').remove();
+
+		    e.preventDefault();
+		    return false;
+	    });
+    });
+  </script>
 </html>
