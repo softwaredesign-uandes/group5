@@ -1,17 +1,29 @@
-var server_url = "http://5726d6e0.ngrok.io";
+var server_url = "http://84df39f4.ngrok.io";
 
 function onOpen() {
   SpreadsheetApp.getUi()
       .createMenu('Block Model')
+      .addItem('Create Mineral Deposit', 'openMineralDepositDialog')
       .addItem('Load Into System', 'openSendConfigurationDialog')
-      .addItem('Get Block Model Statistics', 'showStatisticsDialog')
-      .addItem('Get Reblocked Model', 'openReblockModelDialog')
+      .addItem('Get Block Models', 'showBlockModelsDialog')
+      .addItem('Get Block Model Statistics', 'openStatisticsForm')
+      .addItem('Reblock Model', 'openReblockModelDialog')
       .addToUi();
 }
 
 function openSendConfigurationDialog() {
   var html = HtmlService.createHtmlOutputFromFile('BlockModelLoadForm');
   SpreadsheetApp.getUi().showModalDialog(html, 'Load Block Model');
+}
+
+function openMineralDepositDialog() {
+  var html = HtmlService.createHtmlOutputFromFile('NewMineralDepositForm');
+  SpreadsheetApp.getUi().showModalDialog(html, 'New Mineral Deposit');
+}
+
+function openStatisticsForm() {
+  var html = HtmlService.createHtmlOutputFromFile('ModelStatisticsForm');
+  SpreadsheetApp.getUi().showModalDialog(html, 'Get Block Model Statistics');
 }
 
 function openReblockModelDialog() {
@@ -32,15 +44,43 @@ function handleSendForm(formValues) {
   sendBlockModel(columns);
 }
 
-function handleReblockForm(formValues) {
-  getReblockedModel(formValues.rx, formValues.ry, formValues.rz);
+function handleMineralDepositForm(formValues) {
+  addMineralDeposit(formValues.mineralDepositName);
 }
 
-function showStatisticsDialog() {
-  var statistics = getBlockModelStatistics();
+function handleStatisticsForm(formValues) {
+  showStatisticsDialog(formValues.blockModelId);
+}
+
+function handleReblockForm(formValues) {
+  saveReblockedModel(formValues.blockModelId, formValues.rx, formValues.ry, formValues.rz);
+}
+
+function showBlockModelsDialog() {
+  var request = getBlockModels();
+  var mineralDeposits = request.mineral_deposits;
+  var blockModelsText = "";
+  for(var mineralDeposit in mineralDeposits) {
+    blockModelsText += mineralDeposits[mineralDeposit].mineral_deposit_id + " - " + mineralDeposit + ": ";
+    for(var i = 0; i < mineralDeposits[mineralDeposit].block_models.length; i++) {
+      blockModelsText += mineralDeposits[mineralDeposit].block_models[i].id + ", ";
+    }
+    blockModelsText += "\n";
+  }
+  
+  var ui = SpreadsheetApp.getUi();
+  var result = ui.alert('Block Models', blockModelsText, ui.ButtonSet.OK);
+
+}
+
+function showStatisticsDialog(blockModelId) {
+  var statistics = getBlockModelStatistics(blockModelId);
   var statisticsText = "Total Number of Blocks: " + statistics.total_blocks;
   statisticsText += "\nTotal Weight: " + statistics.total_weight;
-  statisticsText += "\nTotal Grade: " + statistics.total_grade;
+  statisticsText += "\nTotal Grade: ";
+  for(var mineralName in statistics.total_grades) {
+    statisticsText += mineralName + ": " + statistics.total_grades[mineralName] + ", ";
+  }
   statisticsText += "\nPercentage of Air: " + statistics.air_percentage + "%";
   
   var ui = SpreadsheetApp.getUi();
@@ -48,24 +88,50 @@ function showStatisticsDialog() {
 
 }
 
-function getBlockModelStatistics() {
-  var statistics = UrlFetchApp.fetch(server_url + "/block_model");
+function getMineralDeposits() {
+  var deposits = UrlFetchApp.fetch(server_url + "/mineral_deposits");
+  return JSON.parse(deposits.getContentText());
+}
+
+function addMineralDeposit(depositName) {
+  var url = server_url + "/mineral_deposits"
+  var payload = JSON.stringify({"mineral_deposit": {"name": depositName}});
+  var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
+  var response = UrlFetchApp.fetch(url, options);
+}
+
+function getBlockModels() {
+  var deposits = UrlFetchApp.fetch(server_url + "/block_models");
+  return JSON.parse(deposits.getContentText());
+}
+
+function addBlockModel(columns, ores, depositId) {
+  var url = server_url + "/block_models"
+  var payload = convertColumnsToJson(columns, ores, depositId);
+  var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
+  var response = UrlFetchApp.fetch(url, options);
+}
+
+function getBlockModelStatistics(blockModelId) {
+  var statistics = UrlFetchApp.fetch(server_url + "/block_models/" + blockModelId);
   return JSON.parse(statistics.getContentText());
 }
 
-function sendBlockModel(columns) {
-  var url = server_url + "/block_model"
-  var payload = convertColumnsToJson(columns);
-  var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
-  var response = UrlFetchApp.fetch(url, options);
+function getBlockModelBlocks(blockModelId) {
+  var blocks = UrlFetchApp.fetch(server_url + "/block_models/" + blockModelId + "/blocks");
+  return JSON.parse(blocks.getContentText());
 }
 
-function getReblockedModel(rx, ry, rz) {
-  var url = server_url + "/block_model/reblocked_model"
-  var payload = JSON.stringify({ 'rx': rx, 'ry': ry, 'rz': rz });
+function getBlock(blockModelId, blockId) {
+  var block = UrlFetchApp.fetch(server_url + "/block_models/" + blockModelId + "/blocks/" + blockId);
+  return JSON.parse(block.getContentText());
+}
+
+function saveReblockedModel(blockModelId, rx, ry, rz) {
+  var url = server_url + "/block_models";
+  var payload = JSON.stringify({ 'base_block_model_id': blockModelId, 'rx': rx, 'ry': ry, 'rz': rz });
   var options = { "method":"POST", "contentType" : "application/json","payload" : payload };
   var response = UrlFetchApp.fetch(url, options);
-  createNewSheetForModel(JSON.parse(response.getContentText()), "Reblocked Model");
 }
 
 function createNewSheetForModel(json_block_model, sheetName) {
@@ -79,23 +145,26 @@ function createNewSheetForModel(json_block_model, sheetName) {
   
   newSheet.clear();
   for (var i = 0; i < json_block_model.x_positions.length; i++) {
-    newSheet.appendRow([json_block_model.x_positions[i], json_block_model.y_positions[i], json_block_model.z_positions[i],
-                       json_block_model.weights[i], json_block_model.grades[i]]);
+    newRow = [json_block_model.x_positions[i], json_block_model.y_positions[i], json_block_model.z_positions[i], json_block_model.weights[i]];
+    for (var mineralName in json_block_model.grades) {
+      newRow.push(json_block_model.grades[mineralName][i])
+    }
+    newSheet.appendRow(newRow);
   }
 }
 
-function convertColumnsToJson(columns) {
+function convertColumnsToJson(columns, ores, depositId) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet();
   var xPositions = sheet.getRange(columns[0]).getValues().map(function(e){return e[0];});
   var yPositions = sheet.getRange(columns[1]).getValues().map(function(e){return e[0];});
   var zPositions = sheet.getRange(columns[2]).getValues().map(function(e){return e[0];});
   var weights = sheet.getRange(columns[3]).getValues().map(function(e){return e[0];});
-  var grades = [];
+  var grades = {};
   for (var i = 0; i < columns[4].length; i++) 
     {
-      grades.push(sheet.getRange(columns[4][i]).getValues().map(function(e){return e[0];}));
+      grades[ores[i]] = sheet.getRange(columns[4][i]).getValues().map(function(e){return e[0];});
     }
-  var jsonObject = {'block_model': { 'x_positions': xPositions, 'y_positions': yPositions, 'z_positions': zPositions, 
+  var jsonObject = {'deposit_id': depositId, 'block_model': { 'x_positions': xPositions, 'y_positions': yPositions, 'z_positions': zPositions, 
                                     'weights': weights, 'grades': grades }}
   return JSON.stringify(jsonObject);
 }
